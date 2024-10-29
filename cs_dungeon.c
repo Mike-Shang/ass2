@@ -144,20 +144,70 @@ struct boss *create_boss(int health_points, int damage, int points,
 //                             Stage 1 Functions                              //
 ////////////////////////////////////////////////////////////////////////////////
 
-// Provided Function stubs:
-
 struct map *create_map(char *name, int win_requirement)
 {
-    // TODO: implement this function
-    printf("Create Map not yet implemented.\n");
-    exit(1);
+    struct map *new_map = malloc(sizeof(struct map));
+    if (new_map == NULL)
+    {
+        printf("Failed to allocate memory for map.\n");
+        exit(1);
+    }
+
+    // 复制地图名称
+    strncpy(new_map->name, name, sizeof(new_map->name) - 1);
+    new_map->name[sizeof(new_map->name) - 1] = '\0';
+
+    // 设置胜利条件
+    new_map->win_requirement = win_requirement;
+
+    // 根据你的结构体定义，初始化其他字段
+    // 如果没有其他字段，可以省略
+
+    return new_map;
 }
 
 struct player *create_player(char *name, char *class_type)
 {
-    // TODO: implement this function
-    printf("Create Player not yet implemented.\n");
-    exit(1);
+    struct player *new_player = malloc(sizeof(struct player));
+    if (new_player == NULL)
+    {
+        printf("Failed to allocate memory for map name.\n");
+        exit(1);
+    }
+
+    // 复制玩家名称
+    strncpy(new_player->name, name, sizeof(new_player->name) - 1);
+    new_player->name[sizeof(new_player->name) - 1] = '\0';
+
+    // 复制职业类型
+    strncpy(new_player->class_type, class_type, sizeof(new_player->class_type) - 1);
+    new_player->class_type[sizeof(new_player->class_type) - 1] = '\0';
+
+    // 根据职业类型设置属性
+    if (strcmp(class_type, "Fighter") == 0)
+    {
+        new_player->health_points = 30;
+        new_player->shield_power = 2;
+        new_player->damage = 8;
+        new_player->magic_modifier = 0.9;
+    }
+    else if (strcmp(class_type, "Wizard") == 0)
+    {
+        new_player->health_points = 15;
+        new_player->shield_power = 0;
+        new_player->damage = 7;
+        new_player->magic_modifier = 1.5;
+    }
+    else
+    {
+        printf("Unknown class type.\n");
+        exit(1);
+    }
+
+    // 初始化其他字段
+    // 根据你的结构体定义
+
+    return new_player;
 }
 
 // Creates a new dungeon
@@ -170,12 +220,32 @@ struct player *create_player(char *name, char *class_type)
 // Returns:
 //      pointer to newly created struct dungeon
 //
-struct dungeon *create_dungeon(char *name, enum monster_type monster,
-                               int num_monsters, int contains_player)
+struct dungeon *create_dungeon(char *name,
+                               enum monster_type monster,
+                               int num_monsters,
+                               int contains_player)
 {
-    // TODO: implement this function
-    printf("Create Dungeon not yet implemented.\n");
-    exit(1);
+    struct dungeon *new_dungeon = malloc(sizeof(struct dungeon));
+    if (new_dungeon == NULL)
+    {
+        printf("Failed to allocate memory for dungeon.\n");
+        exit(1);
+    }
+
+    // 复制地下城名称
+    strncpy(new_dungeon->name, name, sizeof(new_dungeon->name) - 1);
+    new_dungeon->name[sizeof(new_dungeon->name) - 1] = '\0';
+
+    // 设置其他属性
+    new_dungeon->monster = monster;
+    new_dungeon->num_monsters = num_monsters;
+    new_dungeon->contains_player = contains_player;
+    new_dungeon->boss = NULL; // 初始时没有 Boss
+
+    // 初始化其他字段
+    // 根据你的结构体定义
+
+    return new_dungeon;
 }
 
 int append_dungeon(struct map *map,
