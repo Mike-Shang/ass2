@@ -1,8 +1,8 @@
 // Assignment 2 24T3 COMP1511: CS Dungeon
 // cs_dungeon.c
 //
-// This program was written by <YOUR-NAME> <YOUR-zID>
-// on <TODAYS-DATE>
+// Fangyuan SHANG z5614452
+// 10 30 2024 DMY
 //
 // Version 1.0.0: Assignment released.
 //
