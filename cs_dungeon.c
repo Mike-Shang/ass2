@@ -248,8 +248,34 @@ int append_dungeon(struct map *map,
                    enum monster_type monster,
                    int num_monsters)
 {
+    // Check for invalid name (already exists)
+    struct dungeon *current = map->entrance;
+    while (current != NULL)
+    {
+        if (strncmp(current->name, name, MAX_STR_LEN) == 0)
+        {
+            // Name already exists
+            return INVALID_NAME;
+        }
+        current = current->next;
+    }
+
+    // Check for invalid monster type
+    if (monster != SLIME && monster != GOBLIN &&
+        monster != SKELETON && monster != WOLF)
+    {
+        return INVALID_MONSTER;
+    }
+
+    // Check for invalid number of monsters
+    if (num_monsters < 1 || num_monsters > 10)
+    {
+        return INVALID_AMOUNT;
+    }
+
     // Determine if the dungeon should contain the player
     int contains_player = (map->entrance == NULL) ? 1 : 0;
+
     // Create the new dungeon
     struct dungeon *new_dungeon = create_dungeon(name, monster, num_monsters, contains_player);
     if (new_dungeon == NULL)
@@ -257,22 +283,26 @@ int append_dungeon(struct map *map,
         printf("Failed to create dungeon.\n");
         exit(1);
     }
+
     // Append the new dungeon to the map's dungeon list
     if (map->entrance == NULL)
     {
         // First dungeon, set as entrance
         map->entrance = new_dungeon;
+        // Place the player in the map
+        map->player->health_points = map->player->health_points; // Keep health the same
     }
     else
     {
         // Traverse to the end of the list and append
-        struct dungeon *current = map->entrance;
+        current = map->entrance;
         while (current->next != NULL)
         {
             current = current->next;
         }
         current->next = new_dungeon;
     }
+
     // Return VALID to indicate success
     return VALID;
 }
@@ -339,25 +369,54 @@ struct boss *create_boss(int health_points, int damage, int points,
 
 int final_boss(struct map *map, enum item_type required_item)
 {
+    // Check for invalid required item
+    if (required_item != PHYSICAL_WEAPON && required_item != MAGICAL_TOME &&
+        required_item != ARMOR && required_item != HEALTH_POTION &&
+        required_item != TREASURE)
+    {
+        return INVALID_ITEM;
+    }
+
     // Create the boss with the given stats
     struct boss *new_boss = create_boss(35, 10, 20, required_item);
+
     // Find the last dungeon in the map
     struct dungeon *current = map->entrance;
     while (current->next != NULL)
     {
         current = current->next;
     }
+
     // Add the boss to the last dungeon
     current->boss = new_boss;
+
     // Return VALID to indicate success
     return VALID;
 }
 
 void player_stats(struct map *map)
 {
-    // TODO: implement this function
-    printf("Player Stats not yet implemented.\n");
-    exit(1);
+    // Get the player's name
+    char *player_name = get_player_name(map->player);
+
+    // Determine the dungeon name where the player is
+    char *dungeon_name = NULL;
+    struct dungeon *current = map->entrance;
+    while (current != NULL)
+    {
+        if (current->contains_player)
+        {
+            dungeon_name = current->name;
+            break;
+        }
+        current = current->next;
+    }
+
+    // Print the player's stats
+    print_player(map->player, dungeon_name);
+
+    // Since we haven't added items yet (until Stage 3), print no items
+    print_no_items();
 }
 
 // Your functions go here (include function comments):
