@@ -157,11 +157,12 @@ struct map *create_map(char *name, int win_requirement)
     strncpy(new_map->name, name, sizeof(new_map->name) - 1);
     new_map->name[sizeof(new_map->name) - 1] = '\0';
 
-    // 设置胜利条件
+    // 设置获胜需求
     new_map->win_requirement = win_requirement;
 
-    // 根据你的结构体定义，初始化其他字段
-    // 如果没有其他字段，可以省略
+    // 初始化其他字段
+    new_map->entrance = NULL;
+    new_map->player = NULL;
 
     return new_map;
 }
@@ -171,7 +172,7 @@ struct player *create_player(char *name, char *class_type)
     struct player *new_player = malloc(sizeof(struct player));
     if (new_player == NULL)
     {
-        printf("Failed to allocate memory for map name.\n");
+        printf("Failed to allocate memory for player.\n");
         exit(1);
     }
 
@@ -205,7 +206,8 @@ struct player *create_player(char *name, char *class_type)
     }
 
     // 初始化其他字段
-    // 根据你的结构体定义
+    new_player->inventory = NULL;
+    new_player->points = 0;
 
     return new_player;
 }
@@ -240,10 +242,9 @@ struct dungeon *create_dungeon(char *name,
     new_dungeon->monster = monster;
     new_dungeon->num_monsters = num_monsters;
     new_dungeon->contains_player = contains_player;
-    new_dungeon->boss = NULL; // 初始时没有 Boss
-
-    // 初始化其他字段
-    // 根据你的结构体定义
+    new_dungeon->boss = NULL;  // 初始没有 boss
+    new_dungeon->items = NULL; // 初始没有物品
+    new_dungeon->next = NULL;  // 初始没有下一个地下城
 
     return new_dungeon;
 }
@@ -253,9 +254,36 @@ int append_dungeon(struct map *map,
                    enum monster_type monster,
                    int num_monsters)
 {
-    // TODO: implement this function
-    printf("Append Dungeon not yet implemented.\n");
-    exit(1);
+
+    int contains_player = 0;
+
+    if (map->entrance == NULL)
+    {
+        // 这是第一个地下城，玩家从这里开始
+        contains_player = 1;
+    }
+
+    // 创建新的地下城
+    struct dungeon *new_dungeon = create_dungeon(name, monster, num_monsters, contains_player);
+
+    if (map->entrance == NULL)
+    {
+        // 地图为空，将入口设置为新地下城
+        map->entrance = new_dungeon;
+    }
+    else
+    {
+        // 遍历到地下城列表末尾
+        struct dungeon *current = map->entrance;
+        while (current->next != NULL)
+        {
+            current = current->next;
+        }
+        // 附加新地下城
+        current->next = new_dungeon;
+    }
+
+    return VALID;
 }
 
 void print_map(struct map *map)
