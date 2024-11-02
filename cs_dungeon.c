@@ -144,47 +144,43 @@ struct boss *create_boss(int health_points, int damage, int points,
 //                             Stage 1 Functions                              //
 ////////////////////////////////////////////////////////////////////////////////
 
+// Provided Function stubs:
+
 struct map *create_map(char *name, int win_requirement)
 {
+    // Allocate memory for the map
     struct map *new_map = malloc(sizeof(struct map));
     if (new_map == NULL)
     {
-        printf("Failed to allocate memory for map.\n");
+        printf("Memory allocation failed.\n");
         exit(1);
     }
-
-    // 复制地图名称
-    strncpy(new_map->name, name, sizeof(new_map->name) - 1);
-    new_map->name[sizeof(new_map->name) - 1] = '\0';
-
-    // 设置获胜需求
+    // Copy the map name
+    strncpy(new_map->name, name, MAX_STR_LEN);
+    new_map->name[MAX_STR_LEN - 1] = '\0'; // Ensure null-termination
+    // Set the win requirement
     new_map->win_requirement = win_requirement;
-
-    // 初始化其他字段
-    new_map->entrance = NULL;
-    new_map->player = NULL;
-
+    // Initialize other fields
+    new_map->entrance = NULL; // No dungeons yet
+    new_map->player = NULL;   // Player will be set later
     return new_map;
 }
 
 struct player *create_player(char *name, char *class_type)
 {
+    // Allocate memory for the player
     struct player *new_player = malloc(sizeof(struct player));
     if (new_player == NULL)
     {
-        printf("Failed to allocate memory for player.\n");
+        printf("Memory allocation failed.\n");
         exit(1);
     }
-
-    // 复制玩家名称
-    strncpy(new_player->name, name, sizeof(new_player->name) - 1);
-    new_player->name[sizeof(new_player->name) - 1] = '\0';
-
-    // 复制职业类型
-    strncpy(new_player->class_type, class_type, sizeof(new_player->class_type) - 1);
-    new_player->class_type[sizeof(new_player->class_type) - 1] = '\0';
-
-    // 根据职业类型设置属性
+    // Copy the player name and class type
+    strncpy(new_player->name, name, MAX_STR_LEN);
+    new_player->name[MAX_STR_LEN - 1] = '\0'; // Ensure null-termination
+    strncpy(new_player->class_type, class_type, MAX_STR_LEN);
+    new_player->class_type[MAX_STR_LEN - 1] = '\0'; // Ensure null-termination
+    // Initialize stats based on class type
     if (strcmp(class_type, "Fighter") == 0)
     {
         new_player->health_points = 30;
@@ -201,14 +197,15 @@ struct player *create_player(char *name, char *class_type)
     }
     else
     {
-        printf("Unknown class type.\n");
-        exit(1);
+        // Default stats for unknown class
+        new_player->health_points = 20;
+        new_player->shield_power = 0;
+        new_player->damage = 5;
+        new_player->magic_modifier = 1.0;
     }
-
-    // 初始化其他字段
-    new_player->inventory = NULL;
+    // Initialize other fields
+    new_player->inventory = NULL; // Empty inventory
     new_player->points = 0;
-
     return new_player;
 }
 
@@ -222,30 +219,27 @@ struct player *create_player(char *name, char *class_type)
 // Returns:
 //      pointer to newly created struct dungeon
 //
-struct dungeon *create_dungeon(char *name,
-                               enum monster_type monster,
-                               int num_monsters,
-                               int contains_player)
+struct dungeon *create_dungeon(char *name, enum monster_type monster,
+                               int num_monsters, int contains_player)
 {
+    // Allocate memory for the dungeon
     struct dungeon *new_dungeon = malloc(sizeof(struct dungeon));
     if (new_dungeon == NULL)
     {
-        printf("Failed to allocate memory for dungeon.\n");
+        printf("Memory allocation failed.\n");
         exit(1);
     }
-
-    // 复制地下城名称
-    strncpy(new_dungeon->name, name, sizeof(new_dungeon->name) - 1);
-    new_dungeon->name[sizeof(new_dungeon->name) - 1] = '\0';
-
-    // 设置其他属性
+    // Copy the dungeon name
+    strncpy(new_dungeon->name, name, MAX_STR_LEN);
+    new_dungeon->name[MAX_STR_LEN - 1] = '\0'; // Ensure null-termination
+    // Set dungeon fields
     new_dungeon->monster = monster;
     new_dungeon->num_monsters = num_monsters;
     new_dungeon->contains_player = contains_player;
-    new_dungeon->boss = NULL;  // 初始没有 boss
-    new_dungeon->items = NULL; // 初始没有物品
-    new_dungeon->next = NULL;  // 初始没有下一个地下城
-
+    // Initialize other fields
+    new_dungeon->boss = NULL;  // Boss will be added later
+    new_dungeon->items = NULL; // No items yet
+    new_dungeon->next = NULL;  // Next dungeon is NULL
     return new_dungeon;
 }
 
@@ -254,35 +248,32 @@ int append_dungeon(struct map *map,
                    enum monster_type monster,
                    int num_monsters)
 {
-
-    int contains_player = 0;
-
-    if (map->entrance == NULL)
-    {
-        // 这是第一个地下城，玩家从这里开始
-        contains_player = 1;
-    }
-
-    // 创建新的地下城
+    // Determine if the dungeon should contain the player
+    int contains_player = (map->entrance == NULL) ? 1 : 0;
+    // Create the new dungeon
     struct dungeon *new_dungeon = create_dungeon(name, monster, num_monsters, contains_player);
-
+    if (new_dungeon == NULL)
+    {
+        printf("Failed to create dungeon.\n");
+        exit(1);
+    }
+    // Append the new dungeon to the map's dungeon list
     if (map->entrance == NULL)
     {
-        // 地图为空，将入口设置为新地下城
+        // First dungeon, set as entrance
         map->entrance = new_dungeon;
     }
     else
     {
-        // 遍历到地下城列表末尾
+        // Traverse to the end of the list and append
         struct dungeon *current = map->entrance;
         while (current->next != NULL)
         {
             current = current->next;
         }
-        // 附加新地下城
         current->next = new_dungeon;
     }
-
+    // Return VALID to indicate success
     return VALID;
 }
 
