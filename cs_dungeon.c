@@ -397,7 +397,7 @@ int final_boss(struct map *map, enum item_type required_item)
 void player_stats(struct map *map)
 {
     // Get the player's name
-    char *player_name = get_player_name(map->player);
+    // ? char *player_name = get_player_name(map->player);
 
     // Determine the dungeon name where the player is
     char *dungeon_name = NULL;
@@ -430,16 +430,119 @@ void player_stats(struct map *map)
 int insert_dungeon(struct map *map, char *name, enum monster_type monster,
                    int num_monsters, int position)
 {
-    // TODO: implement this function
-    printf("Insert Dungeon not yet implemented.\n");
-    exit(1);
+    // 1. Check for invalid position
+    if (position < 1)
+    {
+        return INVALID_POSITION;
+    }
+
+    // 2. Check for invalid name (already exists)
+    struct dungeon *current = map->entrance;
+    while (current != NULL)
+    {
+        if (strncmp(current->name, name, MAX_STR_LEN) == 0)
+        {
+            // Name already exists
+            return INVALID_NAME;
+        }
+        current = current->next;
+    }
+
+    // 3. Check for invalid monster type
+    if (monster != SLIME && monster != GOBLIN &&
+        monster != SKELETON && monster != WOLF)
+    {
+        return INVALID_MONSTER;
+    }
+
+    // 4. Check for invalid number of monsters
+    if (num_monsters < 1 || num_monsters > 10)
+    {
+        return INVALID_AMOUNT;
+    }
+
+    // Create the new dungeon
+    int contains_player = 0; // By default, the new dungeon doesn't contain the player
+    struct dungeon *new_dungeon = create_dungeon(name, monster, num_monsters, contains_player);
+    if (new_dungeon == NULL)
+    {
+        printf("Failed to create dungeon.\n");
+        exit(1);
+    }
+
+    // Insert the new dungeon at the specified position
+    if (position == 1)
+    {
+        // New dungeon becomes the new entrance
+        new_dungeon->next = map->entrance;
+        map->entrance = new_dungeon;
+
+        // Update player position
+        // Remove player from previous dungeon
+        current = new_dungeon->next;
+        while (current != NULL)
+        {
+            if (current->contains_player)
+            {
+                current->contains_player = 0;
+                break;
+            }
+            current = current->next;
+        }
+        // Place player in the new entrance dungeon
+        new_dungeon->contains_player = 1;
+    }
+    else
+    {
+        // Insert at position or at the tail if position is beyond the length
+        current = map->entrance;
+        int index = 1;
+        struct dungeon *prev = NULL;
+
+        while (current != NULL && index < position)
+        {
+            prev = current;
+            current = current->next;
+            index++;
+        }
+
+        // Insert new dungeon between prev and current
+        prev->next = new_dungeon;
+        new_dungeon->next = current;
+    }
+
+    return VALID;
 }
 
 void print_dungeon(struct map *map)
 {
-    // TODO: implement this function
-    printf("Print Dungeon not yet implemented.\n");
-    exit(1);
+    // Find the dungeon where the player is currently in
+    struct dungeon *current = map->entrance;
+    while (current != NULL)
+    {
+        if (current->contains_player)
+        {
+            // Found the dungeon containing the player
+            break;
+        }
+        current = current->next;
+    }
+
+    if (current == NULL)
+    {
+        // Player is not in any dungeon
+        printf("Player is not in any dungeon.\n");
+        return;
+    }
+
+    // Get the player's name
+    char *player_name = get_player_name(map->player);
+
+    // Print dungeon details
+    print_detail_dungeon(player_name, current);
+
+    // Since we haven't added items yet (until Stage 3), print no items
+    print_no_items();
 }
 
 int move_player(struct map *map, char command)
