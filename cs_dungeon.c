@@ -279,9 +279,32 @@ int append_dungeon(struct map *map,
 
 void print_map(struct map *map)
 {
-    // TODO: implement this function
-    printf("Print Map not yet implemented.\n");
-    exit(1);
+    if (map->entrance == NULL)
+    {
+        // Map is empty
+        print_empty_map();
+        return;
+    }
+    // Print the map's name
+    print_map_name(map->name);
+    // Get the player's name
+    char *player_name = get_player_name(map->player);
+    // Traverse the list of dungeons
+    struct dungeon *current = map->entrance;
+    int position = 1;
+    while (current != NULL)
+    {
+        // Print the dungeon's basic details
+        print_basic_dungeon(current, player_name, position);
+        // Move to the next dungeon
+        current = current->next;
+        position++;
+        // If there is a next dungeon, print the connection
+        if (current != NULL)
+        {
+            print_connection();
+        }
+    }
 }
 
 // Creates a new boss
@@ -299,16 +322,35 @@ void print_map(struct map *map)
 struct boss *create_boss(int health_points, int damage, int points,
                          enum item_type required_item)
 {
-    // TODO: implement this function
-    printf("Create Boss not yet implemented.\n");
-    exit(1);
+    // Allocate memory for the boss
+    struct boss *new_boss = malloc(sizeof(struct boss));
+    if (new_boss == NULL)
+    {
+        printf("Memory allocation failed.\n");
+        exit(1);
+    }
+    // Set boss fields
+    new_boss->health_points = health_points;
+    new_boss->damage = damage;
+    new_boss->points = points;
+    new_boss->required_item = required_item;
+    return new_boss;
 }
 
 int final_boss(struct map *map, enum item_type required_item)
 {
-    // TODO: implement this function
-    printf("Final Boss not yet implemented.\n");
-    exit(1);
+    // Create the boss with the given stats
+    struct boss *new_boss = create_boss(35, 10, 20, required_item);
+    // Find the last dungeon in the map
+    struct dungeon *current = map->entrance;
+    while (current->next != NULL)
+    {
+        current = current->next;
+    }
+    // Add the boss to the last dungeon
+    current->boss = new_boss;
+    // Return VALID to indicate success
+    return VALID;
 }
 
 void player_stats(struct map *map)
