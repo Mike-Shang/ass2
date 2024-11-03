@@ -659,7 +659,7 @@ int fight(struct map *map, char command)
 
     // Get monster stats based on monster type
     int monster_health = current->monster;
-    int monster_damage = current->monster;
+    // int monster_damage = current->monster;
     int monster_points = current->monster;
 
     int monsters_defeated = 0;
