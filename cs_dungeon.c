@@ -55,6 +55,9 @@ struct dungeon
 
     // a pointer to the next dungeon in the map or NULL
     struct dungeon *next;
+
+    // New add
+    int monster_attacked;
 };
 
 // Stores information about an item
@@ -560,21 +563,206 @@ void print_dungeon(struct map *map)
 
 int move_player(struct map *map, char command)
 {
-    // TODO: implement this function
-    printf("Move Player not yet implemented.\n");
-    exit(1);
+    // Find the current dungeon where the player is
+    struct dungeon *current = map->entrance;
+    struct dungeon *previous = NULL;
+    struct dungeon *next = NULL;
+
+    while (current != NULL)
+    {
+        if (current->contains_player)
+        {
+            break;
+        }
+        previous = current;
+        current = current->next;
+    }
+
+    if (current == NULL)
+    {
+        // Player not found in any dungeon
+        return INVALID;
+    }
+
+    if (command == NEXT_DUNGEON)
+    {
+        // Move to the next dungeon
+        next = current->next;
+        if (next == NULL)
+        {
+            // No next dungeon to move into
+            return INVALID;
+        }
+        current->contains_player = 0;
+        next->contains_player = 1;
+    }
+    else if (command == PREVIOUS_DUNGEON)
+    {
+        // Move to the previous dungeon
+        if (previous == NULL)
+        {
+            // No previous dungeon to move into
+            return INVALID;
+        }
+        current->contains_player = 0;
+        previous->contains_player = 1;
+    }
+    else
+    {
+        // Invalid command
+        return INVALID;
+    }
+
+    return VALID;
 }
 
 int fight(struct map *map, char command)
 {
-    // TODO: implement this function
-    printf("Fight not yet implemented.\n");
-    exit(1);
+    // Find the current dungeon where the player is
+    struct dungeon *current = map->entrance;
+    while (current != NULL)
+    {
+        if (current->contains_player)
+        {
+            break;
+        }
+        current = current->next;
+    }
+
+    if (current == NULL)
+    {
+        // Player not found in any dungeon
+        return INVALID;
+    }
+
+    if (current->num_monsters <= 0)
+    {
+        // No monsters to fight
+        return INVALID;
+    }
+
+    // Calculate player's attack power
+    double player_attack;
+    if (command == PHYSICAL_ATTACK)
+    {
+        player_attack = map->player->damage;
+    }
+    else if (command == MAGICAL_ATTACK)
+    {
+        player_attack = map->player->damage * map->player->magic_modifier;
+    }
+    else
+    {
+        // Invalid command
+        return INVALID;
+    }
+
+    // Get monster stats based on monster type
+    int monster_health = current->monster;
+    int monster_damage = current->monster;
+    int monster_points = current->monster;
+
+    int monsters_defeated = 0;
+    double remaining_attack = player_attack;
+
+    // Attack monsters one by one
+    for (int i = 0; i < current->num_monsters; i++)
+    {
+        if (remaining_attack >= monster_health)
+        {
+            // Monster is defeated
+            remaining_attack -= monster_health;
+            monsters_defeated++;
+        }
+        else
+        {
+            // Not enough attack power to defeat more monsters
+            break;
+        }
+    }
+
+    // Update number of monsters in the dungeon
+    current->num_monsters -= monsters_defeated;
+
+    // Calculate points earned
+    int points_earned = monsters_defeated * monster_points;
+    map->player->points += points_earned;
+
+    // Mark that monsters in this dungeon have been attacked
+    if (monsters_defeated > 0)
+    {
+        current->monster_attacked = 1; // Add this field to dungeon struct if needed
+    }
+
+    printf("A battle has raged!\n");
+    return VALID;
 }
 
 int end_turn(struct map *map)
 {
-    // TODO: implement this function
+    struct dungeon *current = map->entrance;
+    struct player *player = map->player;
+
+    // Find the dungeon where the player is
+    struct dungeon *player_dungeon = NULL;
+    while (current != NULL)
+    {
+        if (current->contains_player)
+        {
+            player_dungeon = current;
+            break;
+        }
+        current = current->next;
+    }
+
+    // Reset current to start
+    current = map->entrance;
+
+    // Process monster attacks
+    while (current != NULL)
+    {
+        if (current->num_monsters > 0)
+        {
+            int monster_damage = current->monster;
+            int total_damage = 0;
+
+            // Check if monsters should attack
+            if (current == player_dungeon && current->monster_attacked)
+            {
+                // Monsters in the player's dungeon attack
+                total_damage = monster_damage * current->num_monsters;
+            }
+            else if (current->monster == WOLF)
+            {
+                // Wolves attack every turn if player is in the same dungeon
+                if (current == player_dungeon)
+                {
+                    total_damage = monster_damage * current->num_monsters;
+                }
+            }
+            // Apply shield
+            total_damage -= player->shield_power;
+            if (total_damage < 0)
+            {
+                total_damage = 0;
+            }
+
+            // Reduce player's health
+            if (total_damage > 0)
+            {
+                player->health_points -= total_damage;
+                printf("You have been attacked for %d damage!\n", total_damage);
+                // Check if player is defeated
+                if (player->health_points <= 0)
+                {
+                    return PLAYER_DEFEATED;
+                }
+            }
+        }
+        current = current->next;
+    }
+
+    // For now, return CONTINUE_GAME
     return CONTINUE_GAME;
 }
 
