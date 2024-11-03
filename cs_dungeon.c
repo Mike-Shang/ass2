@@ -660,7 +660,7 @@ int fight(struct map *map, char command)
 
     // Get monster stats based on monster type
     int monster_health = current->monster;
-    // int monster_damage = current->monster;
+    int monster_damage = current->monster;
     int monster_points = current->monster;
 
     int monsters_defeated = 0;
@@ -733,17 +733,19 @@ int end_turn(struct map *map)
             int monster_damage = current->monster;
             int total_damage = 0;
 
-            // Check if monsters should attack
-            if (current == player_dungeon && current->monster_attacked)
-            {
-                // Monsters in the player's dungeon attack
-                total_damage = monster_damage * current->num_monsters;
-            }
-            else if (current == player_dungeon && current->monster == WOLF)
+            // Check if wolves attack
+            if (current == player_dungeon && current->monster == WOLF)
             {
                 // Wolves attack every turn if player is in the same dungeon
                 total_damage = monster_damage * current->num_monsters;
             }
+            // Check if other monsters should attack
+            else if (current == player_dungeon && current->monster_attacked)
+            {
+                // Monsters in the player's dungeon attack
+                total_damage = monster_damage * current->num_monsters;
+            }
+
             // Apply shield
             total_damage -= player->shield_power;
             if (total_damage < 0)
