@@ -736,13 +736,13 @@ int end_turn(struct map *map)
             // Check if wolves attack
             if (current == player_dungeon && current->monster == WOLF)
             {
-                // Wolves attack every turn if player is in the same dungeon
+                // Wolves attack every turn
                 total_damage = monster_damage * current->num_monsters;
             }
             // Check if other monsters should attack
             else if (current == player_dungeon && current->monster_attacked)
             {
-                // Monsters in the player's dungeon attack
+                // Monsters attack if they've been attacked
                 total_damage = monster_damage * current->num_monsters;
             }
 
@@ -753,7 +753,7 @@ int end_turn(struct map *map)
                 total_damage = 0;
             }
 
-            // Reduce player's health
+            // Reduce player's health and print attack message
             if (total_damage > 0)
             {
                 player->health_points -= total_damage;
