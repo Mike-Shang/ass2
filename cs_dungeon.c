@@ -240,9 +240,10 @@ struct dungeon *create_dungeon(char *name, enum monster_type monster,
     new_dungeon->num_monsters = num_monsters;
     new_dungeon->contains_player = contains_player;
     // Initialize other fields
-    new_dungeon->boss = NULL;  // Boss will be added later
-    new_dungeon->items = NULL; // No items yet
-    new_dungeon->next = NULL;  // Next dungeon is NULL
+    new_dungeon->boss = NULL;          // Boss will be added later
+    new_dungeon->items = NULL;         // No items yet
+    new_dungeon->next = NULL;          // Next dungeon is NULL
+    new_dungeon->monster_attacked = 0; // Initialize to 0 (not attacked)
     return new_dungeon;
 }
 
@@ -732,13 +733,10 @@ int end_turn(struct map *map)
                 // Monsters in the player's dungeon attack
                 total_damage = monster_damage * current->num_monsters;
             }
-            else if (current->monster == WOLF)
+            else if (current == player_dungeon && current->monster == WOLF)
             {
                 // Wolves attack every turn if player is in the same dungeon
-                if (current == player_dungeon)
-                {
-                    total_damage = monster_damage * current->num_monsters;
-                }
+                total_damage = monster_damage * current->num_monsters;
             }
             // Apply shield
             total_damage -= player->shield_power;
