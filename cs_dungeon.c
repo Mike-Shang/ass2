@@ -274,7 +274,15 @@ int append_dungeon(struct map *map,
     }
 
     // Determine if the dungeon should contain the player
-    int contains_player = (map->entrance == NULL) ? 1 : 0;
+    int contains_player;
+    if (map->entrance == NULL)
+    {
+        contains_player = 1;
+    }
+    else
+    {
+        contains_player = 0;
+    }
 
     // Create the new dungeon
     struct dungeon *new_dungeon = create_dungeon(name, monster, num_monsters, contains_player);
@@ -290,7 +298,12 @@ int append_dungeon(struct map *map,
         // First dungeon, set as entrance
         map->entrance = new_dungeon;
         // Place the player in the map
-        map->player->health_points = map->player->health_points; // Keep health the same
+        // Ensure map->player is not NULL
+        if (map->player != NULL)
+        {
+            // Player is already created
+            // Do nothing special here
+        }
     }
     else
     {
