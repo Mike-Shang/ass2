@@ -682,20 +682,26 @@ int fight(struct map *map, char command)
         }
     }
 
-    // Update number of monsters in the dungeon
-    current->num_monsters -= monsters_defeated;
-
-    // Calculate points earned
-    int points_earned = monsters_defeated * monster_points;
-    map->player->points += points_earned;
-
-    // Mark that monsters in this dungeon have been attacked
     if (monsters_defeated > 0)
     {
-        current->monster_attacked = 1; // Add this field to dungeon struct if needed
+        // Update number of monsters in the dungeon
+        current->num_monsters -= monsters_defeated;
+
+        // Calculate points earned
+        int points_earned = monsters_defeated * monster_points;
+        map->player->points += points_earned;
+
+        // Mark that monsters in this dungeon have been attacked
+        current->monster_attacked = 1;
+
+        // Print battle message
+        printf("A battle has raged!\n");
+    }
+    else
+    {
+        // No monsters were defeated; do not print anything
     }
 
-    printf("A battle has raged!\n");
     return VALID;
 }
 
