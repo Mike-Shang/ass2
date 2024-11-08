@@ -695,7 +695,6 @@ int fight(struct map *map, char command)
         current->monster_attacked = 1; // Add this field to dungeon struct if needed
     }
 
-    printf("A battle has raged!\n");
     return VALID;
 }
 
@@ -752,7 +751,6 @@ int end_turn(struct map *map)
             if (total_damage > 0)
             {
                 player->health_points -= total_damage;
-                printf("You have been attacked for %d damage!\n", total_damage);
                 // Check if player is defeated
                 if (player->health_points <= 0)
                 {
