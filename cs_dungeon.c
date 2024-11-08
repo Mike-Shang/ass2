@@ -99,6 +99,9 @@ struct player
 
     // the number of points they have collected over the course of the game
     int points;
+
+    // new adding by myself
+    int class_power_used; // 0 if not used, 1 if used
 };
 
 // Stores information about the boss-level monster initially placed in the last
@@ -209,6 +212,7 @@ struct player *create_player(char *name, char *class_type)
     // Initialize other fields
     new_player->inventory = NULL; // Empty inventory
     new_player->points = 0;
+    new_player->class_power_used = 0; // Class power not used yet , new adding in stage 2.5
     return new_player;
 }
 
@@ -660,7 +664,6 @@ int fight(struct map *map, char command)
 
     // Get monster stats based on monster type
     int monster_health = current->monster;
-    int monster_damage = current->monster;
     int monster_points = current->monster;
 
     int monsters_defeated = 0;
@@ -767,9 +770,65 @@ int end_turn(struct map *map)
 
 int class_power(struct map *map)
 {
-    // TODO: implement this function
-    printf("Class Power not yet implemented.\n");
-    exit(1);
+    struct player *player = map->player;
+
+    // Check if the class power has already been used
+    if (player->class_power_used == 1)
+    {
+        return INVALID;
+    }
+
+    // Mark the class power as used
+    player->class_power_used = 1;
+
+    // Apply effects based on class type
+    if (strcmp(player->class_type, "Fighter") == 0)
+    {
+        // Increase damage by 1.5 times
+        player->damage = (int)(player->damage * 1.5);
+    }
+    else if (strcmp(player->class_type, "Wizard") == 0)
+    {
+        // Find the current dungeon
+        struct dungeon *current = map->entrance;
+        while (current != NULL)
+        {
+            if (current->contains_player)
+            {
+                break;
+            }
+            current = current->next;
+        }
+
+        if (current == NULL)
+        {
+            // Player is not in any dungeon
+            return INVALID;
+        }
+
+        // Calculate points earned from defeating all monsters
+        int num_monsters = current->num_monsters;
+        if (num_monsters > 0)
+        {
+            int monster_points = current->monster;
+            int total_points = num_monsters * monster_points;
+
+            // Add points to player
+            player->points += total_points;
+
+            // Remove all monsters
+            current->num_monsters = 0;
+
+            // Note: Boss is not affected
+        }
+    }
+    else
+    {
+        // Unknown class type
+        return INVALID;
+    }
+
+    return VALID;
 }
 
 // Your functions go here (include function comments):
