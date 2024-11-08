@@ -562,8 +562,22 @@ void print_dungeon(struct map *map)
     // Print dungeon details
     print_detail_dungeon(player_name, current);
 
-    // Since we haven't added items yet (until Stage 3), print no items
-    print_no_items();
+    // Print items in the dungeon
+    if (current->items == NULL)
+    {
+        print_no_items();
+    }
+    else
+    {
+        struct item *item_current = current->items;
+        int item_number = 1;
+        while (item_current != NULL)
+        {
+            print_item(item_current, item_number);
+            item_current = item_current->next;
+            item_number++;
+        }
+    }
 }
 
 int move_player(struct map *map, char command)
@@ -839,11 +853,123 @@ int class_power(struct map *map)
 
 // Provided function stubs:
 
+int end_turn(struct map *map)
+{
+    struct dungeon *current = map->entrance;
+    struct player *player = map->player;
+
+    // Find the dungeon where the player is
+    struct dungeon *player_dungeon = NULL;
+    while (current != NULL)
+    {
+        if (current->contains_player)
+        {
+            player_dungeon = current;
+            break;
+        }
+        current = current->next;
+    }
+
+    // Reset current to start
+    current = map->entrance;
+
+    // Process monster attacks
+    while (current != NULL)
+    {
+        if (current->num_monsters > 0)
+        {
+            int monster_damage = current->monster;
+            int total_damage = 0;
+
+            // Check if monsters should attack
+            if (current == player_dungeon && current->monster_attacked)
+            {
+                // Monsters in the player's dungeon attack
+                total_damage = monster_damage * current->num_monsters;
+            }
+            else if (current == player_dungeon && current->monster == WOLF)
+            {
+                // Wolves attack every turn if player is in the same dungeon
+                total_damage = monster_damage * current->num_monsters;
+            }
+            // Apply shield
+            total_damage -= player->shield_power;
+            if (total_damage < 0)
+            {
+                total_damage = 0;
+            }
+
+            // Reduce player's health
+            if (total_damage > 0)
+            {
+                player->health_points -= total_damage;
+                // Do not print in this function; printing is handled in main.c
+            }
+        }
+        current = current->next;
+    }
+
+    // Check if player has been defeated
+    if (player->health_points <= 0)
+    {
+        return PLAYER_DEFEATED;
+    }
+
+    // Check if player meets win conditions
+    int points_required = map->win_requirement;
+
+    if (player->points >= points_required)
+    {
+        int all_monsters_defeated = 1;
+        int boss_defeated = 0;
+
+        current = map->entrance;
+        while (current != NULL)
+        {
+            if (current->num_monsters > 0)
+            {
+                all_monsters_defeated = 0;
+            }
+            if (current->boss != NULL)
+            {
+                if (current->boss->health_points <= 0)
+                {
+                    boss_defeated = 1;
+                }
+            }
+            current = current->next;
+        }
+
+        if (boss_defeated)
+        {
+            return WON_BOSS;
+        }
+        else if (all_monsters_defeated)
+        {
+            return WON_MONSTERS;
+        }
+    }
+
+    // Continue game
+    return CONTINUE_GAME;
+}
+
 struct item *create_item(enum item_type type, int points)
 {
-    // TODO: implement this function
-    printf("Create Item not yet implemented.\n");
-    exit(1);
+    // Allocate memory for the item
+    struct item *new_item = malloc(sizeof(struct item));
+    if (new_item == NULL)
+    {
+        printf("Memory allocation failed.\n");
+        exit(1);
+    }
+
+    // Initialize fields
+    new_item->type = type;
+    new_item->points = points;
+    new_item->next = NULL;
+
+    return new_item;
 }
 
 int add_item(struct map *map,
@@ -851,9 +977,81 @@ int add_item(struct map *map,
              enum item_type type,
              int points)
 {
-    // TODO: implement this function
-    printf("Add Item not yet implemented.\n");
-    exit(1);
+    // Error checking
+
+    // Check for invalid dungeon number
+    if (dungeon_number < 1)
+    {
+        return INVALID_POSITION;
+    }
+
+    // Check for invalid item type
+    if (type != PHYSICAL_WEAPON && type != MAGICAL_TOME &&
+        type != ARMOR && type != HEALTH_POTION && type != TREASURE)
+    {
+        return INVALID_ITEM;
+    }
+
+    // Check for invalid points
+    if (points <= 0)
+    {
+        return INVALID_POINTS;
+    }
+
+    // Find the dungeon at position dungeon_number
+    struct dungeon *current = map->entrance;
+    int position = 1;
+    while (current != NULL && position < dungeon_number)
+    {
+        current = current->next;
+        position++;
+    }
+
+    if (current == NULL)
+    {
+        // Dungeon not found
+        return INVALID_POSITION;
+    }
+
+    // Create the new item
+    struct item *new_item = create_item(type, points);
+
+    // Insert the item into the dungeon's item list in the correct position
+    // Items should be added in the order of the enum, with same types grouped together
+
+    struct item *prev = NULL;
+    struct item *item_current = current->items;
+
+    // Move forward while item's type is less than the new item's type
+    while (item_current != NULL && item_current->type < type)
+    {
+        prev = item_current;
+        item_current = item_current->next;
+    }
+
+    // Now, move forward while item's type equals the new item's type
+    while (item_current != NULL && item_current->type == type)
+    {
+        prev = item_current;
+        item_current = item_current->next;
+    }
+
+    // Insert the new item between prev and item_current
+
+    if (prev == NULL)
+    {
+        // Insert at the beginning
+        new_item->next = current->items;
+        current->items = new_item;
+    }
+    else
+    {
+        // Insert between prev and item_current
+        prev->next = new_item;
+        new_item->next = item_current;
+    }
+
+    return VALID;
 }
 
 int collect_item(struct map *map, int item_number)
