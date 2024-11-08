@@ -660,7 +660,7 @@ int fight(struct map *map, char command)
 
     // Get monster stats based on monster type
     int monster_health = current->monster;
-    // int monster_damage = current->monster;
+    int monster_damage = current->monster;
     int monster_points = current->monster;
 
     int monsters_defeated = 0;
@@ -682,26 +682,20 @@ int fight(struct map *map, char command)
         }
     }
 
+    // Update number of monsters in the dungeon
+    current->num_monsters -= monsters_defeated;
+
+    // Calculate points earned
+    int points_earned = monsters_defeated * monster_points;
+    map->player->points += points_earned;
+
+    // Mark that monsters in this dungeon have been attacked
     if (monsters_defeated > 0)
     {
-        // Update number of monsters in the dungeon
-        current->num_monsters -= monsters_defeated;
-
-        // Calculate points earned
-        int points_earned = monsters_defeated * monster_points;
-        map->player->points += points_earned;
-
-        // Mark that monsters in this dungeon have been attacked
-        current->monster_attacked = 1;
-
-        // Print battle message
-        printf("A battle has raged!\n");
-    }
-    else
-    {
-        // No monsters were defeated; do not print anything
+        current->monster_attacked = 1; // Add this field to dungeon struct if needed
     }
 
+    printf("A battle has raged!\n");
     return VALID;
 }
 
@@ -733,19 +727,20 @@ int end_turn(struct map *map)
             int monster_damage = current->monster;
             int total_damage = 0;
 
-            // Check if wolves attack
-            if (current == player_dungeon && current->monster == WOLF)
+            // Check if monsters should attack
+            if (current == player_dungeon && current->monster_attacked)
             {
-                // Wolves attack every turn
+                // Monsters in the player's dungeon attack
                 total_damage = monster_damage * current->num_monsters;
             }
-            // Check if other monsters should attack
-            else if (current == player_dungeon && current->monster_attacked)
+            else if (current->monster == WOLF)
             {
-                // Monsters attack if they've been attacked
-                total_damage = monster_damage * current->num_monsters;
+                // Wolves attack every turn if player is in the same dungeon
+                if (current == player_dungeon)
+                {
+                    total_damage = monster_damage * current->num_monsters;
+                }
             }
-
             // Apply shield
             total_damage -= player->shield_power;
             if (total_damage < 0)
@@ -753,7 +748,7 @@ int end_turn(struct map *map)
                 total_damage = 0;
             }
 
-            // Reduce player's health and print attack message
+            // Reduce player's health
             if (total_damage > 0)
             {
                 player->health_points -= total_damage;
