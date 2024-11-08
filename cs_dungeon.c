@@ -853,6 +853,24 @@ int class_power(struct map *map)
 
 // Provided function stubs:
 
+struct item *create_item(enum item_type type, int points)
+{
+    // Allocate memory for the item
+    struct item *new_item = malloc(sizeof(struct item));
+    if (new_item == NULL)
+    {
+        printf("Memory allocation failed.\n");
+        exit(1);
+    }
+
+    // Initialize fields
+    new_item->type = type;
+    new_item->points = points;
+    new_item->next = NULL;
+
+    return new_item;
+}
+
 int add_item(struct map *map,
              int dungeon_number,
              enum item_type type,
