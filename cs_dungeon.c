@@ -1066,9 +1066,77 @@ int collect_item(struct map *map, int item_number)
 
 int use_item(struct map *map, int item_number)
 {
-    // TODO: implement this function
-    printf("Use Item not yet implemented.\n");
-    exit(1);
+    struct player *player = map->player;
+
+    if (item_number < 1)
+    {
+        // Invalid item number
+        return INVALID_ITEM; // or INVALID
+    }
+
+    // Traverse the player's inventory to find the item_number
+    struct item *prev_item = NULL;
+    struct item *curr_item = player->inventory;
+    int current_item_number = 1;
+
+    while (curr_item != NULL && current_item_number < item_number)
+    {
+        prev_item = curr_item;
+        curr_item = curr_item->next;
+        current_item_number++;
+    }
+
+    if (curr_item == NULL || current_item_number != item_number)
+    {
+        // Item number does not correspond to an item in the inventory
+        return INVALID_ITEM;
+    }
+
+    // Apply the item's effect on the player's stats
+    switch (curr_item->type)
+    {
+    case PHYSICAL_WEAPON:
+        player->damage += curr_item->points;
+        break;
+    case MAGICAL_TOME:
+        player->magic_modifier += (curr_item->points) / 10.0;
+        break;
+    case ARMOR:
+        player->shield_power += curr_item->points / 2;
+        break;
+    case HEALTH_POTION:
+        player->health_points += curr_item->points + 5;
+        if (player->health_points > MAX_HEALTH)
+        {
+            player->health_points = MAX_HEALTH;
+        }
+        break;
+    case TREASURE:
+        // No effect on player's stats
+        break;
+    default:
+        // Should not reach here
+        break;
+    }
+
+    // Add the item's point value to the player's collected points
+    player->points += curr_item->points;
+
+    // Remove the item from the player's inventory
+    if (prev_item == NULL)
+    {
+        // Item is at the head of the inventory
+        player->inventory = curr_item->next;
+    }
+    else
+    {
+        prev_item->next = curr_item->next;
+    }
+
+    // Free the item's memory
+    free(curr_item);
+
+    return VALID;
 }
 
 void free_map(struct map *map)
