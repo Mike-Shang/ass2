@@ -923,14 +923,13 @@ int add_item(struct map *map,
     }
 
     // Check for invalid item type
-    if (type != PHYSICAL_WEAPON && type != MAGICAL_TOME &&
-        type != ARMOR && type != HEALTH_POTION && type != TREASURE)
+    if (type < PHYSICAL_WEAPON || type > TREASURE)
     {
         return INVALID_ITEM;
     }
 
     // Check for invalid points
-    if (points <= 0)
+    if (points < 1 || points > 10)
     {
         return INVALID_POINTS;
     }
