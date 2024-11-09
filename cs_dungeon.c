@@ -731,10 +731,12 @@ int fight(struct map *map, char command)
 }
 
 // change in stage 3.1
+// change in stage 3.5
 
 int end_turn(struct map *map)
 {
     struct dungeon *current = map->entrance;
+    struct dungeon *previous = NULL;
     struct player *player = map->player;
 
     // Find the dungeon where the player is
@@ -794,6 +796,44 @@ int end_turn(struct map *map)
         return PLAYER_DEFEATED;
     }
 
+    // Remove empty dungeons (excluding the dungeon the player is in)
+    current = map->entrance;
+    previous = NULL;
+
+    while (current != NULL)
+    {
+        // Check if the dungeon is empty and not the player's current dungeon
+        if (current != player_dungeon &&
+            current->num_monsters == 0 &&
+            current->boss == NULL &&
+            current->items == NULL)
+        {
+            // Remove the dungeon from the map
+            struct dungeon *to_delete = current;
+
+            if (previous == NULL)
+            {
+                // Removing the entrance dungeon
+                map->entrance = current->next;
+                current = map->entrance;
+            }
+            else
+            {
+                previous->next = current->next;
+                current = previous->next;
+            }
+
+            // Free the dungeon's memory
+            free_dungeon(to_delete);
+        }
+        else
+        {
+            // Move to the next dungeon
+            previous = current;
+            current = current->next;
+        }
+    }
+
     // Check if player meets win conditions
     int points_required = map->win_requirement;
 
@@ -814,6 +854,11 @@ int end_turn(struct map *map)
                 if (current->boss->health_points <= 0)
                 {
                     boss_defeated = 1;
+                }
+                else
+                {
+                    // Boss is still alive
+                    boss_defeated = 0;
                 }
             }
             current = current->next;
@@ -1141,10 +1186,65 @@ int use_item(struct map *map, int item_number)
 
 void free_map(struct map *map)
 {
-    // TODO: implement this function
+    // Free all dungeons
+    struct dungeon *current_dungeon = map->entrance;
+    while (current_dungeon != NULL)
+    {
+        struct dungeon *next_dungeon = current_dungeon->next;
+        free_dungeon(current_dungeon);
+        current_dungeon = next_dungeon;
+    }
+
+    // Free the player
+    free_player(map->player);
+
+    // Free the map itself
+    free(map);
 }
 
 // Your functions here (include function comments):
+
+void free_dungeon(struct dungeon *dungeon);
+void free_player(struct player *player);
+
+void free_dungeon(struct dungeon *dungeon)
+{
+    // Free the dungeon's name
+    // If name was dynamically allocated, but if it's a fixed-size array, skip this step.
+
+    // Free items in the dungeon
+    struct item *current_item = dungeon->items;
+    while (current_item != NULL)
+    {
+        struct item *next_item = current_item->next;
+        free(current_item);
+        current_item = next_item;
+    }
+
+    // Free the boss (if any)
+    if (dungeon->boss != NULL)
+    {
+        free(dungeon->boss);
+    }
+
+    // Free the dungeon itself
+    free(dungeon);
+}
+
+void free_player(struct player *player)
+{
+    // Free items in the player's inventory
+    struct item *current_item = player->inventory;
+    while (current_item != NULL)
+    {
+        struct item *next_item = current_item->next;
+        free(current_item);
+        current_item = next_item;
+    }
+
+    // Free the player itself
+    free(player);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //                             Stage 4 Functions                              //
