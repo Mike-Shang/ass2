@@ -914,24 +914,10 @@ int add_item(struct map *map,
              enum item_type type,
              int points)
 {
-    // Error checking
-
-    // Check for invalid dungeon number
+    // 1. Check for invalid dungeon number
     if (dungeon_number < 1)
     {
-        return INVALID_POSITION;
-    }
-
-    // Check for invalid item type
-    if (type < PHYSICAL_WEAPON || type > TREASURE)
-    {
-        return INVALID_ITEM;
-    }
-
-    // Check for invalid points
-    if (points < 1 || points > 10)
-    {
-        return INVALID_POINTS;
+        return INVALID_DUNGEON;
     }
 
     // Find the dungeon at position dungeon_number
@@ -946,7 +932,19 @@ int add_item(struct map *map,
     if (current == NULL)
     {
         // Dungeon not found
-        return INVALID_POSITION;
+        return INVALID_DUNGEON;
+    }
+
+    // 2. Check for invalid item type
+    if (type < PHYSICAL_WEAPON || type > TREASURE)
+    {
+        return INVALID_ITEM;
+    }
+
+    // 3. Check for invalid point value
+    if (points < 1 || points > 10)
+    {
+        return INVALID_POINTS;
     }
 
     // Create the new item
