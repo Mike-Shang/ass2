@@ -415,10 +415,11 @@ int final_boss(struct map *map, enum item_type required_item)
     return VALID;
 }
 
+// change in stage 3.3
 void player_stats(struct map *map)
 {
     // Get the player's name
-    // ? char *player_name = get_player_name(map->player);
+    // char *player_name = get_player_name(map->player);
 
     // Determine the dungeon name where the player is
     char *dungeon_name = NULL;
@@ -436,8 +437,22 @@ void player_stats(struct map *map)
     // Print the player's stats
     print_player(map->player, dungeon_name);
 
-    // Since we haven't added items yet (until Stage 3), print no items
-    print_no_items();
+    // Print the player's items
+    if (map->player->inventory == NULL)
+    {
+        print_no_items();
+    }
+    else
+    {
+        struct item *current_item = map->player->inventory;
+        int item_number = 1;
+        while (current_item != NULL)
+        {
+            print_item(current_item, item_number);
+            current_item = current_item->next;
+            item_number++;
+        }
+    }
 }
 
 // Your functions go here (include function comments):
@@ -990,9 +1005,63 @@ int add_item(struct map *map,
 
 int collect_item(struct map *map, int item_number)
 {
-    // TODO: implement this function
-    printf("Collect Item not yet implemented.\n");
-    exit(1);
+    // Find the current dungeon where the player is
+    struct dungeon *current_dungeon = map->entrance;
+    while (current_dungeon != NULL)
+    {
+        if (current_dungeon->contains_player)
+        {
+            break;
+        }
+        current_dungeon = current_dungeon->next;
+    }
+
+    if (current_dungeon == NULL)
+    {
+        // Player is not in any dungeon
+        return INVALID_ITEM; // or INVALID
+    }
+
+    if (item_number < 1)
+    {
+        // Invalid item number
+        return INVALID_ITEM;
+    }
+
+    // Traverse the items in the dungeon to find the item_number
+    struct item *prev_item = NULL;
+    struct item *curr_item = current_dungeon->items;
+    int current_item_number = 1;
+
+    while (curr_item != NULL && current_item_number < item_number)
+    {
+        prev_item = curr_item;
+        curr_item = curr_item->next;
+        current_item_number++;
+    }
+
+    if (curr_item == NULL || current_item_number != item_number)
+    {
+        // Item number does not correspond to an item in the dungeon
+        return INVALID_ITEM;
+    }
+
+    // Remove the item from the dungeon's item list
+    if (prev_item == NULL)
+    {
+        // The item is the first in the list
+        current_dungeon->items = curr_item->next;
+    }
+    else
+    {
+        prev_item->next = curr_item->next;
+    }
+
+    // Add the item to the head of the player's inventory
+    curr_item->next = map->player->inventory;
+    map->player->inventory = curr_item;
+
+    return VALID;
 }
 
 int use_item(struct map *map, int item_number)
