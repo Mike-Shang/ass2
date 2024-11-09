@@ -146,6 +146,13 @@ struct boss *create_boss(int health_points, int damage, int points,
 // You can find descriptions of what each function
 // should do in dungeon.h
 
+// my function declaration
+
+void free_dungeon(struct dungeon *dungeon);
+void free_player(struct player *player);
+
+////////////////////////////
+
 ////////////////////////////////////////////////////////////////////////////////
 //                             Stage 1 Functions                              //
 ////////////////////////////////////////////////////////////////////////////////
@@ -1183,13 +1190,6 @@ int use_item(struct map *map, int item_number)
 
     return VALID;
 }
-
-// my function declaration
-
-void free_dungeon(struct dungeon *dungeon);
-void free_player(struct player *player);
-
-////////////////////////////
 
 void free_map(struct map *map)
 {
