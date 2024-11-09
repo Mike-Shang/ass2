@@ -1184,6 +1184,13 @@ int use_item(struct map *map, int item_number)
     return VALID;
 }
 
+// my function declaration
+
+void free_dungeon(struct dungeon *dungeon);
+void free_player(struct player *player);
+
+////////////////////////////
+
 void free_map(struct map *map)
 {
     // Free all dungeons
@@ -1203,9 +1210,6 @@ void free_map(struct map *map)
 }
 
 // Your functions here (include function comments):
-
-void free_dungeon(struct dungeon *dungeon);
-void free_player(struct player *player);
 
 void free_dungeon(struct dungeon *dungeon)
 {
