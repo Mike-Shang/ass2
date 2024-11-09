@@ -715,6 +715,8 @@ int fight(struct map *map, char command)
     return VALID;
 }
 
+// change in stage 3.1
+
 int end_turn(struct map *map)
 {
     struct dungeon *current = map->entrance;
@@ -749,13 +751,10 @@ int end_turn(struct map *map)
                 // Monsters in the player's dungeon attack
                 total_damage = monster_damage * current->num_monsters;
             }
-            else if (current->monster == WOLF)
+            else if (current == player_dungeon && current->monster == WOLF)
             {
                 // Wolves attack every turn if player is in the same dungeon
-                if (current == player_dungeon)
-                {
-                    total_damage = monster_damage * current->num_monsters;
-                }
+                total_damage = monster_damage * current->num_monsters;
             }
             // Apply shield
             total_damage -= player->shield_power;
@@ -768,17 +767,54 @@ int end_turn(struct map *map)
             if (total_damage > 0)
             {
                 player->health_points -= total_damage;
-                // Check if player is defeated
-                if (player->health_points <= 0)
-                {
-                    return PLAYER_DEFEATED;
-                }
+                // Do not print in this function; printing is handled in main.c
             }
         }
         current = current->next;
     }
 
-    // For now, return CONTINUE_GAME
+    // Check if player has been defeated
+    if (player->health_points <= 0)
+    {
+        return PLAYER_DEFEATED;
+    }
+
+    // Check if player meets win conditions
+    int points_required = map->win_requirement;
+
+    if (player->points >= points_required)
+    {
+        int all_monsters_defeated = 1;
+        int boss_defeated = 0;
+
+        current = map->entrance;
+        while (current != NULL)
+        {
+            if (current->num_monsters > 0)
+            {
+                all_monsters_defeated = 0;
+            }
+            if (current->boss != NULL)
+            {
+                if (current->boss->health_points <= 0)
+                {
+                    boss_defeated = 1;
+                }
+            }
+            current = current->next;
+        }
+
+        if (boss_defeated)
+        {
+            return WON_BOSS;
+        }
+        else if (all_monsters_defeated)
+        {
+            return WON_MONSTERS;
+        }
+    }
+
+    // Continue game
     return CONTINUE_GAME;
 }
 
@@ -852,6 +888,8 @@ int class_power(struct map *map)
 ////////////////////////////////////////////////////////////////////////////////
 
 // Provided function stubs:
+
+// change the end_turn !!!!!!!
 
 struct item *create_item(enum item_type type, int points)
 {
