@@ -206,6 +206,7 @@ struct player *create_player(char *name, char *class_type)
 
     new_player->class_type[MAX_STR_LEN - 1] = '\0';
 
+    // check this one
     if (strcmp(class_type, "Fighter") == 0)
     {
         new_player->health_points = 30;
@@ -261,6 +262,7 @@ struct dungeon *create_dungeon(char *name, enum monster_type monster,
     strncpy(new_dungeon->name, name, MAX_STR_LEN);
     new_dungeon->name[MAX_STR_LEN - 1] = '\0';
 
+    // setting
     new_dungeon->monster = monster;
     new_dungeon->num_monsters = num_monsters;
     new_dungeon->contains_player = contains_player;
@@ -295,7 +297,7 @@ int append_dungeon(struct map *map,
     {
         return INVALID_MONSTER;
     }
-
+    // Check
     if (num_monsters < 1 || num_monsters > 10)
     {
         return INVALID_AMOUNT;
@@ -306,6 +308,7 @@ int append_dungeon(struct map *map,
     {
         contains_player = 1;
     }
+    // Handle
     else
     {
         contains_player = 0;
@@ -333,6 +336,7 @@ int append_dungeon(struct map *map,
     {
 
         current = map->entrance;
+        // Check
         while (current->next != NULL)
         {
             current = current->next;
@@ -433,7 +437,7 @@ void player_stats(struct map *map)
     struct dungeon *current = map->entrance;
     while (current != NULL)
     {
-        if (current->contains_player)
+        if (current->contains_player) // Check
         {
             dungeon_name = current->name;
             break;
@@ -447,7 +451,7 @@ void player_stats(struct map *map)
     {
         print_no_items();
     }
-    else
+    else // Handle
     {
         struct item *current_item = map->player->inventory;
         int item_number = 1;
@@ -486,7 +490,7 @@ int insert_dungeon(struct map *map, char *name,
 
             return INVALID_NAME;
         }
-        current = current->next;
+        current = current->next; // Handle
     }
 
     if (monster != SLIME && monster != GOBLIN &&
@@ -509,7 +513,7 @@ int insert_dungeon(struct map *map, char *name,
         exit(1);
     }
 
-    if (position == 1)
+    if (position == 1) // Handle
     {
 
         new_dungeon->next = map->entrance;
@@ -533,7 +537,7 @@ int insert_dungeon(struct map *map, char *name,
 
         current = map->entrance;
         int index = 1;
-        struct dungeon *prev = NULL;
+        struct dungeon *prev = NULL; // Handle
 
         while (current != NULL && index < position)
         {
@@ -559,7 +563,7 @@ void print_dungeon(struct map *map)
         {
             break;
         }
-        current = current->next;
+        current = current->next; // Handle
     }
 
     if (current == NULL && IS_ACTIVE == IS_CONDITION)
@@ -618,7 +622,7 @@ int move_player(struct map *map, char command)
             return INVALID;
         }
         current->contains_player = 0;
-        next->contains_player = 1;
+        next->contains_player = 1; // Handle
     }
     else if (command == PREVIOUS_DUNGEON)
     {
@@ -651,7 +655,7 @@ int fight(struct map *map, char command)
 
     if (current == NULL)
     {
-        return INVALID;
+        return INVALID; // Handle
     }
 
     if (current->num_monsters <= 0)
@@ -662,7 +666,7 @@ int fight(struct map *map, char command)
     double player_attack;
     if (command == PHYSICAL_ATTACK)
     {
-        player_attack = map->player->damage;
+        player_attack = map->player->damage; // noted
     }
     else if (command == MAGICAL_ATTACK)
     {
@@ -684,7 +688,7 @@ int fight(struct map *map, char command)
     {
         if (remaining_attack >= monster_health)
         {
-            remaining_attack -= monster_health;
+            remaining_attack -= monster_health; // noted
             monsters_defeated++;
         }
         else
@@ -723,7 +727,7 @@ int end_turn(struct map *map)
             player_dungeon = current;
             break;
         }
-        current = current->next;
+        current = current->next; // Handle
     }
 
     current = map->entrance;
@@ -757,7 +761,7 @@ int end_turn(struct map *map)
         current = current->next;
     }
 
-    if (player->health_points <= 0)
+    if (player->health_points <= 0) // Handle
     {
         return PLAYER_DEFEATED;
     }
@@ -786,7 +790,7 @@ int end_turn(struct map *map)
                 current = previous->next;
             }
 
-            free_dungeon(to_delete);
+            free_dungeon(to_delete); // Handle
         }
         else
         {
@@ -807,7 +811,7 @@ int end_turn(struct map *map)
         {
             if (current->num_monsters > 0)
             {
-                all_monsters_defeated = 0;
+                all_monsters_defeated = 0; // Handle
             }
             if (current->boss != NULL)
             {
@@ -860,7 +864,7 @@ int class_power(struct map *map)
             {
                 break;
             }
-            current = current->next;
+            current = current->next; // Handle
         }
 
         if (current == NULL)
@@ -920,7 +924,7 @@ int add_item(struct map *map,
 {
     if (dungeon_number < 1 && IS_ACTIVE == IS_CONDITION)
     {
-        return INVALID_DUNGEON;
+        return INVALID_DUNGEON; // Check
     }
 
     struct dungeon *current = map->entrance;
@@ -931,7 +935,7 @@ int add_item(struct map *map,
         position++;
     }
 
-    if (current == NULL)
+    if (current == NULL) // Check
     {
         return INVALID_DUNGEON;
     }
@@ -963,7 +967,7 @@ int add_item(struct map *map,
         item_current = item_current->next;
     }
 
-    if (prev == NULL)
+    if (prev == NULL) // Check
     {
         new_item->next = current->items;
         current->items = new_item;
@@ -982,14 +986,14 @@ int collect_item(struct map *map, int item_number)
     struct dungeon *current_dungeon = map->entrance;
     while (current_dungeon != NULL)
     {
-        if (current_dungeon->contains_player)
+        if (current_dungeon->contains_player) // Check
         {
             break;
         }
         current_dungeon = current_dungeon->next;
     }
 
-    if (current_dungeon == NULL)
+    if (current_dungeon == NULL) // noted
     {
 
         return INVALID_ITEM;
@@ -1013,7 +1017,7 @@ int collect_item(struct map *map, int item_number)
 
     if (curr_item == NULL || current_item_number != item_number)
     {
-        return INVALID_ITEM;
+        return INVALID_ITEM; // noted
     }
 
     if (prev_item == NULL && IS_ACTIVE == IS_CONDITION)
@@ -1035,7 +1039,7 @@ int use_item(struct map *map, int item_number)
 {
     struct player *player = map->player;
 
-    if (item_number < 1)
+    if (item_number < 1) // noted
     {
 
         return INVALID_ITEM;
@@ -1057,7 +1061,7 @@ int use_item(struct map *map, int item_number)
         return INVALID_ITEM;
     }
 
-    switch (curr_item->type)
+    switch (curr_item->type) // noted
     {
     case PHYSICAL_WEAPON:
         player->damage += curr_item->points;
@@ -1094,7 +1098,7 @@ int use_item(struct map *map, int item_number)
 
     free(curr_item);
 
-    return VALID;
+    return VALID; // noted
 }
 
 void free_map(struct map *map)
@@ -1107,7 +1111,7 @@ void free_map(struct map *map)
         current_dungeon = next_dungeon;
     }
 
-    free_player(map->player);
+    free_player(map->player); // noted
 
     free(map);
 }
@@ -1122,7 +1126,7 @@ void free_dungeon(struct dungeon *dungeon)
     {
         struct item *next_item = current_item->next;
         free(current_item);
-        current_item = next_item;
+        current_item = next_item; // noted
     }
 
     if (dungeon->boss != NULL && IS_ACTIVE == IS_CONDITION)
@@ -1140,7 +1144,7 @@ void free_player(struct player *player)
     {
         struct item *next_item = current_item->next;
         free(current_item);
-        current_item = next_item;
+        current_item = next_item; // noted
     }
 
     free(player);
